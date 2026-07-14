@@ -1,0 +1,150 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import CategoryCard from "../../components/CategoryCard.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { getProducts, getCategories } from "../../lib/woocommerce";
+
+let products: Awaited<ReturnType<typeof getProducts>> = [];
+let categories: Awaited<ReturnType<typeof getCategories>> = [];
+let loadError = false;
+
+try {
+  // Fetch all products
+  products = await getProducts({ perPage: 100 });
+  
+  // Fetch and filter categories
+  const allCategories = await getCategories();
+  const allowedIds = [126, 133, 132, 128];
+  categories = allCategories.filter((category) => allowedIds.includes(Number(category.id)));
+} catch {
+  loadError = true;
+}
+---
+
+<Layout title="All Products" description="Browse every product Kiran Enterprises stocks.">
+  
+  {/* Categories Section */}
+  {categories.length > 0 && (
+    <section class="section categories-section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Browse Categories</h2>
+        </div>
+        <div class="category-grid">
+          {categories.map((c) => <CategoryCard category={c} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* All Products Section */}
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h1>All Products</h1>
+        <span class="count" id="result-count"></span>
+      </div>
+
+      {loadError ? (
+        <p class="notice">
+          Products couldn't be loaded from the store right now. Check your WooCommerce credentials in <code>.env</code>.
+        </p>
+      ) : (
+        <>
+          <div class="product-grid" id="product-grid">
+            {products.map((p) => <ProductCard product={p} />)}
+          </div>
+          <p class="empty" id="empty-state" hidden>No products match your search.</p>
+        </>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const grid = document.getElementById("product-grid");
+  const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>("[data-name]")) : [];
+  const emptyState = document.getElementById("empty-state");
+  const countEl = document.getElementById("result-count");
+
+  function applyFilter(term: string) {
+    const query = term.trim().toLowerCase();
+    let visible = 0;
+    for (const card of cards) {
+      const matches = !query || (card.dataset.name ?? "").includes(query);
+      card.style.display = matches ? "" : "none";
+      if (matches) visible += 1;
+    }
+    if (emptyState) emptyState.hidden = visible !== 0;
+    if (countEl) countEl.textContent = query ? `${visible} result${visible === 1 ? "" : "s"}` : "";
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const initial = params.get("search") ?? "";
+  if (initial) {
+    const headerInput = document.getElementById("site-search") as HTMLInputElement | null;
+    if (headerInput) headerInput.value = initial;
+  }
+  applyFilter(initial);
+
+  document.querySelector("form.search")?.addEventListener("input", (e) => {
+    const target = e.target as HTMLInputElement;
+    if (target?.id === "site-search") applyFilter(target.value);
+  });
+</script>
+
+<style>
+  /* Reduce padding on the categories section so it sits nicely above products */
+  .categories-section {
+    padding-bottom: 0; 
+  }
+  
+  .section-head {
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  /* Grid layout for categories (4 columns) */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 800px) {
+    .category-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 480px) {
+    .category-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .count {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--steel);
+  }
+  
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px 20px;
+  }
+  
+  .empty {
+    color: var(--steel);
+    padding-block: 24px;
+  }
+  
+  .notice {
+    background: #fff4e0;
+    border: 1px solid var(--hazard);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 0.9rem;
+  }
+</style>

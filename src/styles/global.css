@@ -1,0 +1,175 @@
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap");
+
+:root {
+  /* Color — brand amber pulled from the existing mark, deepened with a
+     steel-plate charcoal so it reads industrial rather than "warm cream AI". */
+  --clay: #b8752e;
+  --clay-deep: #8a5416;
+  --charcoal: #201b16;
+  --steel: #4a463f;
+  --paper: #faf8f4;
+  --panel: #f0ece3;
+  --line: #e2dccd;
+  --hazard: #e2a53a;
+
+  /* Type */
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius: 3px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--charcoal);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  line-height: 1.02;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button, input {
+  font-family: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--clay-deep);
+  outline-offset: 2px;
+}
+
+.wrap {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 48px);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--clay-deep);
+}
+
+/* Hazard rule — the signature divider: a thin stepped stripe, standing in
+   for the yellow/black caution tape you'd see on any material yard. */
+.hazard-rule {
+  height: 6px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--clay) 0 14px,
+    var(--charcoal) 14px 28px
+  );
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.95rem;
+  padding: 13px 26px;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--clay);
+  color: var(--paper);
+}
+.btn-primary:hover {
+  background: var(--clay-deep);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--charcoal);
+  color: var(--charcoal);
+}
+.btn-outline:hover {
+  background: var(--charcoal);
+  color: var(--paper);
+}
+
+.btn-light {
+  background: var(--paper);
+  color: var(--charcoal);
+}
+.btn-light:hover {
+  background: var(--panel);
+}
+
+.section {
+  padding-block: clamp(40px, 6vw, 72px);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.section-head h2 {
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+}
+
+.section-head a {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--clay-deep);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.section-head a:hover {
+  text-decoration: underline;
+}

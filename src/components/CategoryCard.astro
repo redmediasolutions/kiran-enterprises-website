@@ -1,0 +1,99 @@
+---
+import type { WCCategory } from "../lib/woocommerce";
+
+interface Props {
+  category: WCCategory;
+}
+
+const { category } = Astro.props;
+
+// Map your category slugs to their custom subtitles
+const subtitles: Record<string, string> = {
+  "cement": "Foundations & Structures",
+  "paints": "Interior & Exterior",
+  "paint": "Interior & Exterior",
+  "tanks": "Water Storage Solutions",
+  "tank": "Water Storage Solutions",
+  "tiles": "Flooring & Decor",
+  "tile-adhesive": "Flooring & Decor"
+};
+
+// Fallback to product count if a category doesn't have a custom subtitle
+const subtitleText = subtitles[category.slug] || `${category.count} products`;
+---
+
+<a class="tile" href={`/category/${category.slug}`}>
+  <div class="icon">
+    {category.image ? (
+      <img src={category.image.src} alt="" loading="lazy" />
+    ) : (
+      <span aria-hidden="true">{category.name.charAt(0)}</span>
+    )}
+  </div>
+  <p>{category.name}</p>
+  <span class="subtitle">{subtitleText}</span>
+</a>
+
+<style>
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--charcoal);
+    /* Soft gray background with no border */
+    background: #f6f6f6; 
+    border-radius: var(--radius);
+    padding: 36px 16px;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  
+  .tile:hover {
+    transform: translateY(-3px);
+    background: #f0f0f0;
+  }
+
+  .icon {
+    width: 64px;
+    height: 64px;
+    /* Rounded square instead of a circle */
+    border-radius: 14px; 
+    /* Pure white background for the icon container */
+    background: #ffffff; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 4px;
+    /* Optional: very subtle shadow to make the white pop */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+  
+  .icon img {
+    width: 50%;
+    height: 50%;
+    object-fit: contain;
+  }
+  
+  .icon span {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--clay);
+  }
+
+  p {
+    margin: 0;
+    font-weight: 700;
+    /* Removed uppercase to match screenshot */
+    font-size: 1.15rem;
+    letter-spacing: 0.01em;
+  }
+
+  .subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--steel);
+  }
+</style>

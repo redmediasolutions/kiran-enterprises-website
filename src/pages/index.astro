@@ -1,0 +1,231 @@
+---
+import Layout from "../layouts/Layout.astro";
+import CategoryCard from "../components/CategoryCard.astro";
+import ProductCard from "../components/ProductCard.astro";
+import { getCategories, getProducts } from "../lib/woocommerce";
+
+let categories: Awaited<ReturnType<typeof getCategories>> = [];
+let featured: Awaited<ReturnType<typeof getProducts>> = [];
+let categoryRails: { category: (typeof categories)[number]; products: typeof featured }[] = [];
+let loadError = false;
+
+// 1. Fetch Categories independently
+try {
+  const allCategories = await getCategories();
+  const allowedIds = [126, 133, 132, 128];
+  
+  // Filter them locally based on your target IDs
+  categories = allCategories.filter((category) => allowedIds.includes(Number(category.id)));
+} catch (error) {
+  console.error("Error fetching categories:", error);
+  loadError = true;
+}
+
+// 2. Fetch Featured Products independently
+try {
+  featured = await getProducts({ featured: true, perPage: 4 });
+} catch (error) {
+  console.error("Error fetching featured products:", error);
+}
+
+// 3. Fetch Category Rails independently
+try {
+  if (categories.length > 0) {
+    categoryRails = await Promise.all(
+      categories.map(async (category) => ({
+        category,
+        products: await getProducts({ category: String(category.id), perPage: 4 }),
+      }))
+    );
+  }
+} catch (error) {
+  console.error("Error fetching category rails:", error);
+}
+---
+
+<Layout title="Building materials in Mangaluru">
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <p class="eyebrow">Kulshekar · Mangaluru · Est. 1993</p>
+      <h1>Your one-stop destination for building materials</h1>
+      <p class="sub">From cement to paints — premium quality products delivered on time.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/products">Explore Products</a>
+        <a class="btn btn-outline" href="/#contact">Get in Touch</a>
+      </div>
+    </div>
+  </section>
+  <div class="hazard-rule"></div>
+
+  {loadError && (
+    <div class="wrap">
+      <p class="notice">
+        Products couldn't be loaded from the store right now. Check that <code>WC_STORE_URL</code>,
+        <code>WC_CONSUMER_KEY</code> and <code>WC_CONSUMER_SECRET</code> are set in <code>.env</code>.
+      </p>
+    </div>
+  )}
+
+  {categories.length > 0 && (
+    <section class="section" id="categories">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Browse Categories</h2>
+          <a href="/products" class="view-all">VIEW ALL CATEGORIES</a>
+        </div>
+        <div class="category-grid">
+          {categories.map((c) => <CategoryCard category={c} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {featured.length > 0 && (
+    <section class="section band">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Fast Selling Products</h2>
+          <a href="/products">See All</a>
+        </div>
+        <div class="product-grid">
+          {featured.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {categoryRails.filter((r) => r.products.length > 0).map((rail) => (
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>{rail.category.name}</h2>
+          <a href={`/category/${rail.category.slug}`}>See All</a>
+        </div>
+        <div class="product-grid">
+          {rail.products.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+  ))}
+</Layout>
+
+<style>
+  .hero {
+    position: relative;
+    background: linear-gradient(160deg, var(--charcoal) 0%, #322a1f 65%, var(--clay-deep) 130%);
+    color: var(--paper);
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/Slider-300x167.jpg"); 
+    background-size: cover;
+    background-position: center;
+    opacity: 0.28;
+    mix-blend-mode: luminosity;
+    animation: slowZoom 25s linear infinite alternate;
+  }
+
+
+
+  @keyframes slowZoom {
+    0% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(1.15); /* Zooms in by 15% */
+    }
+  }
+  .hero-inner {
+    position: relative;
+    padding-block: clamp(64px, 12vw, 128px);
+    max-width: 760px;
+  }
+
+  .hero .eyebrow {
+    color: var(--hazard);
+    margin-bottom: 18px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    max-width: 14ch;
+    margin-bottom: 22px;
+  }
+
+  .hero .sub {
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
+    color: #e6e0d3;
+    max-width: 46ch;
+    margin: 0 0 32px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .band {
+    background: var(--panel);
+  }
+
+  /* Forces exactly 4 equal columns that fill the space */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+
+  /* Layout for the Heading and Link */
+  #categories .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  /* Styling for the View All link */
+  #categories .section-head .view-all {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--clay-deep); /* Uses your existing brown/orange color */
+    text-decoration: none;
+  }
+
+  /* Make it responsive so it doesn't squish on phones */
+  @media (max-width: 800px) {
+    .category-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 480px) {
+    .category-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px 20px;
+  }
+
+  .notice {
+    background: #fff4e0;
+    border: 1px solid var(--hazard);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    margin-top: 24px;
+  }
+  .notice code {
+    font-family: var(--font-mono);
+    background: rgba(0, 0, 0, 0.06);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+</style>

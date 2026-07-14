@@ -1,0 +1,189 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { getProducts, getRelatedProducts, formatPrice } from "../../lib/woocommerce";
+
+export async function getStaticPaths() {
+  const products = await getProducts({ perPage: 100 });
+  return products.map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
+  }));
+}
+
+const { product } = Astro.props;
+const related = await getRelatedProducts(product);
+const image = product.images[0];
+const category = product.categories[0];
+const APP_URL = import.meta.env.PUBLIC_APP_URL;
+---
+
+<Layout title={product.name} description={product.short_description.replace(/<[^>]+>/g, "").slice(0, 155)}>
+  <section class="section">
+    <div class="wrap">
+      <p class="breadcrumb">
+        <a href="/">Home</a> /
+        {category && <><a href={`/category/${category.slug}`}>{category.name}</a> /</>}
+        {product.name}
+      </p>
+
+      <div class="detail">
+        <div class="gallery">
+          {image ? (
+            <img src={image.src} alt={image.alt || product.name} />
+          ) : (
+            <div class="gallery-fallback" aria-hidden="true">KE</div>
+          )}
+        </div>
+
+        <div class="info">
+          <h1>{product.name}</h1>
+          <p class="price">{formatPrice(product.price)}</p>
+
+          {product.short_description && (
+            <div class="desc" set:html={product.short_description} />
+          )}
+
+          <a class="btn btn-primary app-cta" href={APP_URL} target="_blank" rel="noopener">
+            Order on the Kiran Enterprises App
+          </a>
+          <p class="hint">
+            Ordering happens in our app — tap above to open the listing on Google Play.
+          </p>
+
+          {category && (
+            <p class="cat-line">Category <a href={`/category/${category.slug}`}>{category.name}</a></p>
+          )}
+        </div>
+      </div>
+
+      {product.description && (
+        <div class="long-desc" set:html={product.description} />
+      )}
+    </div>
+  </section>
+
+  {related.length > 0 && (
+    <section class="section band">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Related Products</h2>
+        </div>
+        <div class="product-grid">
+          {related.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+  )}
+</Layout>
+
+<style>
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--steel);
+    margin-bottom: 24px;
+  }
+  .breadcrumb a {
+    color: var(--steel);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover {
+    color: var(--clay-deep);
+  }
+
+  .detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+  }
+
+  .gallery {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+  .gallery img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 28px;
+  }
+  .gallery-fallback {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    color: var(--clay);
+  }
+
+  .info h1 {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    margin-bottom: 14px;
+  }
+
+  .price {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    color: var(--clay-deep);
+    margin: 0 0 20px;
+  }
+
+  .desc {
+    color: var(--steel);
+    font-size: 0.96rem;
+    margin-bottom: 26px;
+  }
+  .desc :global(p) {
+    margin: 0 0 10px;
+  }
+
+  .app-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hint {
+    font-size: 0.82rem;
+    color: var(--steel);
+    margin: 10px 0 22px;
+  }
+
+  .cat-line {
+    font-size: 0.88rem;
+  }
+  .cat-line a {
+    color: var(--clay-deep);
+    text-decoration: none;
+  }
+  .cat-line a:hover {
+    text-decoration: underline;
+  }
+
+  .long-desc {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    max-width: 70ch;
+    color: var(--steel);
+  }
+
+  .band {
+    background: var(--panel);
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px 20px;
+  }
+
+  @media (max-width: 780px) {
+    .detail {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+  }
+</style>
